@@ -1,4 +1,11 @@
 {
-    "recording": false,
-    "kill": false
+    "debug": true,
+    "detector_frame_width": 640,
+    "detector_frame_height": 480,
+    "detector_frame_rate": 10,
+    "detector_threshold": 5,
+    "alert_threshold": 5,
+    "recorder_frame_width": 1280,
+    "recorder_frame_height": 720,
+    "recorder_frame_rate": 30
 }
