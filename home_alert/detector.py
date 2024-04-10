@@ -85,5 +85,5 @@ class Detector():
                 self.alerts = 0
 
         det.release()
-        if self.config.debug:
+        if self.config.debug and self.config.detecting:
             cv2.destroyWindow(f'det-{self.cam}')

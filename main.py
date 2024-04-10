@@ -2,6 +2,8 @@ import time
 import threading
 from pathlib import Path
 
+import cv2
+
 from home_alert import Config, Detector, Recorder, DiscordBot
 
 
@@ -9,6 +11,7 @@ def main():
     cwd = Path.cwd()
     config_path = cwd / "config.json"
     recording_path = cwd / "recordings"
+    recording_path.mkdir(exist_ok=True)
     config = Config(config_path)
     detector = Detector(0, config)
     recorder = Recorder(0, config, recording_path)

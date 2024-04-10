@@ -26,13 +26,14 @@ class Recorder():
         return cap
 
 
-    def _get_recorder(self, filepath) -> cv2.VideoWriter:
+    def _get_recorder(self, filepath: Path, cap: cv2.VideoCapture) -> cv2.VideoWriter:
         '''Creates and returns a Video Writer object for the recorder component.'''
 
-        rec = cv2.VideoWriter(str(filepath), 
-                            fourcc=cv2.VideoWriter_fourcc(*'mp4v'),
-                            fps=self.config.recorder_frame_rate, 
-                            frameSize=(int(self.config.recorder_frame_width), int(self.config.recorder_frame_height))
+        rec = cv2.VideoWriter(
+            str(filepath), 
+            fourcc=cv2.VideoWriter_fourcc(*'mp4v'),
+            fps=cap.get(cv2.CAP_PROP_FPS), 
+            frameSize=(int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         )
         return rec
 
@@ -68,14 +69,14 @@ class Recorder():
             if rec is None:
                 filename = f'{int(cur_timestamp)}.mp4'
                 filepath = self.recording_path / filename
-                rec = self._get_recorder(filepath)
+                rec = self._get_recorder(filepath, cap)
 
             #  Checking macx filesize for uploading restrictions. not exact convertion to bytes to leave some margin.
             if filepath.stat().st_size > (self.config.max_file_size_mb * 1000000):
                 filename = f'{int(cur_timestamp)}.mp4'
                 filepath = self.recording_path / filename
                 rec.release()
-                rec = self._get_recorder(filepath)
+                rec = self._get_recorder(filepath, cap)
             
             rec.write(frame)
             count += 1
@@ -84,7 +85,7 @@ class Recorder():
                 cv2.imshow(f'cap-{self.cam}', frame)
                 cv2.waitKey(self.config.recorder_frame_rate)
 
-            if count >= 20 * int(self.config.recorder_frame_rate):
+            if count >= 5 * int(self.config.recorder_frame_rate):
                 cap.release()
                 rec.release()
                 rec = None
@@ -92,10 +93,11 @@ class Recorder():
                 self.config.recording = False
                 self.config.detecting = True
                 
-                
                 if self.config.debug:
                     cv2.destroyWindow(f'cap-{self.cam}')
         
         cap.release()
-        cv2.destroyWindow(f'cap-{self.cam}')
-        rec.release()
+        if self.config.debug and self.config.recording:
+            cv2.destroyWindow(f'cap-{self.cam}')
+        if rec is not None:
+            rec.release()
