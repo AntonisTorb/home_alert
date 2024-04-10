@@ -72,19 +72,21 @@ class Detector():
                 cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")
                 cv2.putText(threshold, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
                 cv2.imshow(f'det-{self.cam}', threshold)
-                cv2.waitKey(self.config.detector_frame_rate)
+                cv2.waitKey(int(1000 / det.get(cv2.CAP_PROP_FPS)))
             
             previous_frame = frame
 
             if self.alerts > self.config.alerts_to_trigger_recording:
                 det.release()
-                cv2.destroyWindow(f'det-{self.cam}')
+                if self.config.debug:
+                    cv2.destroyWindow(f'det-{self.cam}')
                 self.config.recording = True
                 self.config.detecting = False
+                print("now recording...")
                 previous_frame = None
                 self.alerts = 0
 
         if self.config.detecting:
             det.release()
-            if self.config.debug:
+            if self.config.debug and det.isOpened():
                 cv2.destroyWindow(f'det-{self.cam}')

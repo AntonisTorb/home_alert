@@ -11,7 +11,7 @@ class Config():
             "detecting": True,
             "recording": False,
             "debug": True,
-            "max_file_size_mb": 10,
+            "max_file_size_mb": 25,
             "detector_frame_width": 640,
             "detector_frame_height": 480,
             "detector_frame_rate": 10,

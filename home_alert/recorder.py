@@ -83,22 +83,24 @@ class Recorder():
 
             if self.config.debug:
                 cv2.imshow(f'cap-{self.cam}', frame)
-                cv2.waitKey(self.config.recorder_frame_rate)
+                cv2.waitKey(1)
 
-            if count >= 5 * int(self.config.recorder_frame_rate):
+            if count >= 10 * int(self.config.recorder_frame_rate):
                 cap.release()
                 rec.release()
                 rec = None
                 count = 0
                 self.config.recording = False
                 self.config.detecting = True
+                print("recording finished, now detecting...")
                 
                 if self.config.debug:
                     cv2.destroyWindow(f'cap-{self.cam}')
         
         if self.config.recording:
             cap.release()
-            if self.config.debug:
-                cv2.destroyWindow(f'cap-{self.cam}')
             if rec is not None:
                 rec.release()
+            if self.config.debug:
+                cv2.destroyWindow(f'cap-{self.cam}')
+
