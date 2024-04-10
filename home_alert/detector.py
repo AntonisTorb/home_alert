@@ -84,6 +84,7 @@ class Detector():
                 previous_frame = None
                 self.alerts = 0
 
-        det.release()
-        if self.config.debug and self.config.detecting:
-            cv2.destroyWindow(f'det-{self.cam}')
+        if self.config.detecting:
+            det.release()
+            if self.config.debug:
+                cv2.destroyWindow(f'det-{self.cam}')

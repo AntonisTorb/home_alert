@@ -96,8 +96,9 @@ class Recorder():
                 if self.config.debug:
                     cv2.destroyWindow(f'cap-{self.cam}')
         
-        cap.release()
-        if self.config.debug and self.config.recording:
-            cv2.destroyWindow(f'cap-{self.cam}')
-        if rec is not None:
-            rec.release()
+        if self.config.recording:
+            cap.release()
+            if self.config.debug:
+                cv2.destroyWindow(f'cap-{self.cam}')
+            if rec is not None:
+                rec.release()
