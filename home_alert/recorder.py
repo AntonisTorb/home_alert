@@ -8,6 +8,7 @@ import cv2
 from .configuration import Config
 
 class Recorder():
+    
     def __init__(self, cam: int, config: Config, recording_path: Path) -> None:
         '''Recorder Class that represents the video recording component of the application.'''
 
@@ -103,4 +104,3 @@ class Recorder():
                 rec.release()
             if self.config.debug:
                 cv2.destroyWindow(f'cap-{self.cam}')
-
