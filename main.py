@@ -12,7 +12,7 @@ def main():
     config_path = cwd / "config.json"
     recording_path = cwd / "recordings"
     recording_path.mkdir(exist_ok=True)
-    config = Config(config_path)
+    config = Config(config_path, 0)
     detector = Detector(0, config)
     recorder = Recorder(0, config, recording_path)
 
