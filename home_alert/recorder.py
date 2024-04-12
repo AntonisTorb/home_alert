@@ -6,9 +6,10 @@ import time
 import cv2
 
 from .configuration import Config
+from .utils import Component
 
-class Recorder():
-    
+class Recorder(Component):
+
     def __init__(self, cam: int, config: Config, recording_path: Path) -> None:
         '''Recorder Class that represents the video recording component of the application.'''
 
@@ -60,7 +61,10 @@ class Recorder():
             if not cap.isOpened():
                 cap = self._get_rec_capture()
             
-            _, frame = cap.read()
+            ret, frame = cap.read()
+            if not ret:
+                print("Error, no frame received!")
+                continue
             
             cur_date = datetime.datetime.now()
             cur_timestamp = cur_date.timestamp()
@@ -68,13 +72,13 @@ class Recorder():
             cv2.putText(frame, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 1, cv2.LINE_AA)
             
             if rec is None:
-                filename = f'{int(cur_timestamp)}.mp4'
+                filename = f'{self.cam}-{int(cur_timestamp)}.mp4'
                 filepath = self.recording_path / filename
                 rec = self._get_recorder(filepath, cap)
 
             #  Checking macx filesize for uploading restrictions. not exact convertion to bytes to leave some margin.
             if filepath.stat().st_size > (self.config.max_file_size_mb * 1000000):
-                filename = f'{int(cur_timestamp)}.mp4'
+                filename = f'{self.cam}-{int(cur_timestamp)}.mp4'
                 filepath = self.recording_path / filename
                 rec.release()
                 rec = self._get_recorder(filepath, cap)

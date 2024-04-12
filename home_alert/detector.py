@@ -5,8 +5,9 @@ import cv2
 import numpy as np
 
 from .configuration import Config
+from .utils import Component
 
-class Detector():
+class Detector(Component):
 
     def __init__(self, cam: int, config: Config) -> None:
         '''Detector Class that represents the movement detector component of the application.'''
@@ -46,7 +47,7 @@ class Detector():
                 det = self._get_detector()
             ret, frame = det.read()
             if not ret:
-                print(ret)
+                print("Error, no frame received!")
                 continue
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.GaussianBlur(frame, (21,21), 0)
