@@ -1,13 +1,15 @@
 import datetime
+import logging
 import time
 
 import cv2
 import numpy as np
 
 from .configuration import Config
-from .utils import Component
+from .utils import write_log_exception, write_log_info, write_log_error
 
-class Detector(Component):
+
+class Detector:
 
     def __init__(self, cam: int, config: Config) -> None:
         '''Detector Class that represents the movement detector component of the application.'''
@@ -15,27 +17,22 @@ class Detector(Component):
         self.cam = cam
         self.config = config
         self.alerts = 0
+        self.logger = logging.getLogger(__name__)
+        self.bad_frames_counter = 5
+        self.previous_frame = None
 
-    def _get_detector(self) -> cv2.VideoCapture:
-        '''Creates and returns a Video Capture object for the detector component.'''
+    def _make_detector(self) -> None:
+        '''Creates a Video Capture object for the detector component.'''
 
-        det = cv2.VideoCapture(self.cam)
-        det.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.detector_frame_width) 
-        det.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config.detector_frame_height)
-        det.set(cv2.CAP_PROP_FPS, self.config.detector_frame_rate)
-        return det
+        self.det = cv2.VideoCapture(self.cam)
+        self.det.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.detector_frame_width) 
+        self.det.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config.detector_frame_height)
+        self.det.set(cv2.CAP_PROP_FPS, self.config.detector_frame_rate)
 
 
-    def detect(self) -> None:
-        '''Main loop for the movement detector component.'''
+    def _detector_loop(self) -> None:
+        '''Detector component logic loop.'''
 
-        det = self._get_detector()
-        if self.config.debug:
-            print(f'Detector Framerate: {det.get(cv2.CAP_PROP_FPS)}')
-            print(f'Detector Frame Width: {det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-            print(f'Detector Frame Height: {det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
-
-        previous_frame = None
         while True:
             if self.config.kill:
                 break
@@ -43,53 +40,80 @@ class Detector(Component):
                 time.sleep(0.5)
                 continue
 
-            if not det.isOpened():
-                det = self._get_detector()
-            ret, frame = det.read()
+            if not self.det.isOpened():
+                self._make_detector()
+            ret, frame = self.det.read()
+
             if not ret:
-                print("Error, no frame received!")
+                if self.config.debug:
+                    print("Detector: No frame received!")
+                if self.bad_frames_counter <= 0:
+                    write_log_error(self.logger, "Detector: No frames received.")
+                    self.config.kill = True
+                else:
+                    self.bad_frames_counter -= 1
                 continue
+            elif ret and self.bad_frames_counter < 5:
+                self.bad_frames_counter += 1
+
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.GaussianBlur(frame, (21,21), 0)
 
-            if type(previous_frame) != np.ndarray:
-                previous_frame = frame
+            if type(self.previous_frame) != np.ndarray:
+                self.previous_frame = frame
                 continue
                 
-            difference = cv2.absdiff(frame, previous_frame)
+            difference = cv2.absdiff(frame, self.previous_frame)
             threshold = cv2.threshold(difference, self.config.detector_threshold, 255, cv2.THRESH_BINARY)[1]
             if (threshold_mean := round(threshold.mean(), 2)) > self.config.alert_threshold:
                 self.alerts += 1
             else:
                 if self.alerts > 0:
                     self.alerts -= 1
-            
 
             if self.config.debug:
                 if threshold_mean > 0:
-                    print(threshold_mean)
+                    print(f'{threshold_mean = }')
                 cur_date = datetime.datetime.now()
-                cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")
+                cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
                 cv2.putText(threshold, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
                 cv2.imshow(f'det-{self.cam}', threshold)
-                try:
-                    cv2.waitKey(int(1000 / det.get(cv2.CAP_PROP_FPS)))
-                except ZeroDivisionError:
-                    cv2.waitKey(1)
+                cv2.waitKey(1)
+
             
-            previous_frame = frame
+            self.previous_frame = frame
 
             if self.alerts > self.config.alerts_to_trigger_recording:
-                det.release()
-                if self.config.debug:
-                    cv2.destroyWindow(f'det-{self.cam}')
+                self.det.release()
+                self.previous_frame = None
+                self.alerts = 0
                 self.config.recording = True
                 self.config.detecting = False
-                print("now recording...")
-                previous_frame = None
-                self.alerts = 0
+                if self.config.debug:
+                    cv2.destroyWindow(f'det-{self.cam}')
+                    print("Alarm triggered, starting recording.")
+                write_log_info(self.logger, "Alarm triggered, starting recording.")
 
-        if self.config.detecting:
-            det.release()
-            if self.config.debug and det.isOpened():
-                cv2.destroyWindow(f'det-{self.cam}')
+    def detect(self) -> None:
+        '''Main loop for the movement detector component.'''
+
+        try:
+            self._make_detector()
+            
+            if self.config.debug:
+                print(f'Detector Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
+                print(f'Detector Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                print(f'Detector Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                write_log_info(self.logger, f'Recorder Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
+                write_log_info(self.logger, f'Recorder Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                write_log_info(self.logger, f'Recorder Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+
+            self._detector_loop()
+            
+            if self.config.detecting:
+                self.det.release()
+                if self.config.debug:
+                    cv2.destroyWindow(f'det-{self.cam}')
+        except Exception as e:
+            write_log_exception(self.logger, e)
+            self.config.kill = True

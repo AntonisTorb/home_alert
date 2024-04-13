@@ -1,10 +1,7 @@
-from abc import ABC
 import datetime
 import logging
 from pathlib import Path
 
-class Component(ABC):
-    pass
 
 def write_log_exception(logger:logging.Logger, content: Exception):
     '''Utility function to write exceptions to the log file.'''
@@ -21,6 +18,14 @@ def write_log_info(logger:logging.Logger, content: str):
     timestamp = now.timestamp()
     date = now.strftime("%Y-%m-%d %H:%M:%S")
     logger.info(f'|{timestamp}|{date}|{content}')
+
+def write_log_error(logger:logging.Logger, content: str):
+    '''Utility function to write errors to the log file.'''
+    
+    now = datetime.datetime.now()
+    timestamp = now.timestamp()
+    date = now.strftime("%Y-%m-%d %H:%M:%S")
+    logger.error(f'|{timestamp}|{date}|{content}')
 
 
 def maintain_log(log_path: Path|str, days: int) -> None:

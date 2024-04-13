@@ -1,4 +1,5 @@
 import datetime
+import logging
 from pathlib import Path
 import time
 
@@ -6,51 +7,48 @@ import time
 import cv2
 
 from .configuration import Config
-from .utils import Component
+from .utils import write_log_exception, write_log_info, write_log_error
 
-class Recorder(Component):
 
-    def __init__(self, cam: int, config: Config, recording_path: Path) -> None:
+class Recorder:
+
+
+    def __init__(self, cam: int, config: Config, recording_dir_path: Path) -> None:
         '''Recorder Class that represents the video recording component of the application.'''
 
         self.cam = cam
         self.config = config
-        self.recording_path = recording_path
+        self.recording_dir_path = recording_dir_path
+        self.rec_filepath = None
+        self.rec = None
+        self.logger = logging.getLogger(__name__)
+        self.bad_frames_counter = 5
+
+        self.count = 0
 
 
-    def _get_rec_capture(self) -> cv2.VideoCapture:
-        '''Creates and returns a Video Capture object for the recorder component.'''
+    def _make_rec_capture(self) -> None:
+        '''Creates a Video Capture object for the recorder component.'''
 
-        cap = cv2.VideoCapture(self.cam)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.recorder_frame_width) 
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config.recorder_frame_height)
-        cap.set(cv2.CAP_PROP_FPS, self.config.recorder_frame_rate)
-        return cap
+        self.cap = cv2.VideoCapture(self.cam)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.recorder_frame_width) 
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config.recorder_frame_height)
+        self.cap.set(cv2.CAP_PROP_FPS, self.config.recorder_frame_rate)
 
 
-    def _get_recorder(self, filepath: Path, cap: cv2.VideoCapture) -> cv2.VideoWriter:
+    def _make_recorder(self) -> None:
         '''Creates and returns a Video Writer object for the recorder component.'''
 
-        rec = cv2.VideoWriter(
-            str(filepath), 
+        self.rec = cv2.VideoWriter(
+            str(self.rec_filepath), 
             fourcc=cv2.VideoWriter_fourcc(*'mp4v'),
-            fps=cap.get(cv2.CAP_PROP_FPS), 
-            frameSize=(int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+            fps=self.cap.get(cv2.CAP_PROP_FPS), 
+            frameSize=(int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         )
-        return rec
 
-    def record(self) -> None:
-        '''Main loop for the recording component.'''
 
-        count = 0
-        cap = self._get_rec_capture()
-        filepath = None
-
-        rec = None
-        if self.config.debug:
-            print(f'Recorder Framerate: {cap.get(cv2.CAP_PROP_FPS)}')
-            print(f'Recorder Frame Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-            print(f'Recorder Frame Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+    def _recorder_loop(self) -> None:
+        '''Recorder component logic loop.'''
 
         while True:
             if self.config.kill:
@@ -58,53 +56,81 @@ class Recorder(Component):
             if not self.config.recording:
                 time.sleep(0.1)
                 continue
-            if not cap.isOpened():
-                cap = self._get_rec_capture()
+            if not self.cap.isOpened():
+                self._make_rec_capture()
             
-            ret, frame = cap.read()
+            ret, frame = self.cap.read()
             if not ret:
-                print("Error, no frame received!")
+                if self.config.debug:
+                    print("Recorder: No frame received!")
+                if self.bad_frames_counter <= 0:
+                    write_log_error(self.logger, "Recorder: No frames received.")
+                    self.config.kill = True
+                else:
+                    self.bad_frames_counter -= 1
                 continue
+            elif ret and self.bad_frames_counter < 5:
+                self.bad_frames_counter += 1
             
             cur_date = datetime.datetime.now()
             cur_timestamp = cur_date.timestamp()
-            cur_date = cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")
+            cur_date = cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
             cv2.putText(frame, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 1, cv2.LINE_AA)
             
-            if rec is None:
+            if self.rec is None:
                 filename = f'{self.cam}-{int(cur_timestamp)}.mp4'
-                filepath = self.recording_path / filename
-                rec = self._get_recorder(filepath, cap)
+                self.rec_filepath = self.recording_dir_path / filename
+                self._make_recorder()
 
-            #  Checking macx filesize for uploading restrictions. not exact convertion to bytes to leave some margin.
-            if filepath.stat().st_size > (self.config.max_file_size_mb * 1000000):
+            #  Checking max filesize for uploading restrictions. Not exact convertion to bytes to leave some margin.
+            if self.rec_filepath.stat().st_size > (self.config.max_file_size_mb * 1000000):
                 filename = f'{self.cam}-{int(cur_timestamp)}.mp4'
-                filepath = self.recording_path / filename
-                rec.release()
-                rec = self._get_recorder(filepath, cap)
+                self.rec_filepath = self.recording_dir_path / filename
+                self.rec.release()
+                self._make_recorder()
             
-            rec.write(frame)
-            count += 1
+            self.rec.write(frame)
+            self.count += 1
 
             if self.config.debug:
                 cv2.imshow(f'cap-{self.cam}', frame)
                 cv2.waitKey(1)
 
-            if count >= 10 * int(self.config.recorder_frame_rate):
-                cap.release()
-                rec.release()
-                rec = None
-                count = 0
+            if self.count >= 10 * int(self.config.recorder_frame_rate):
+                self.cap.release()
+                self.rec.release()
+                self.rec = None
+                self.count = 0
                 self.config.recording = False
                 self.config.detecting = True
-                print("recording finished, now detecting...")
-                
                 if self.config.debug:
                     cv2.destroyWindow(f'cap-{self.cam}')
-        
-        if self.config.recording:
-            cap.release()
-            if rec is not None:
-                rec.release()
+                    print("Stopping recording. Detecting active.")
+                write_log_info(self.logger, "Stopping recording. Detecting active.")
+
+
+    def record(self) -> None:
+        '''Main loop for the recording component.'''
+
+        try:
+            self._make_rec_capture()
+
             if self.config.debug:
-                cv2.destroyWindow(f'cap-{self.cam}')
+                print(f'Recorder Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
+                print(f'Recorder Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                print(f'Recorder Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                write_log_info(self.logger, f'Recorder Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
+                write_log_info(self.logger, f'Recorder Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                write_log_info(self.logger, f'Recorder Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+
+            self._recorder_loop()
+            
+            if self.config.recording:
+                self.cap.release()
+                if self.rec is not None:
+                    self.rec.release()
+                if self.config.debug:
+                    cv2.destroyWindow(f'cap-{self.cam}')
+        except Exception as e:
+            write_log_exception(self.logger, e)
+            self.config.kill = True
