@@ -90,7 +90,10 @@ class Detector:
                 self.config.recording = True
                 self.config.detecting = False
                 if self.config.debug:
-                    cv2.destroyWindow(f'det-{self.cam}')
+                    try:
+                        cv2.destroyWindow(f'det-{self.cam}')
+                    except cv2.error:
+                        pass
                     print("Alarm triggered, starting recording.")
                 write_log_info(self.logger, "Alarm triggered, starting recording.")
 
@@ -99,21 +102,24 @@ class Detector:
 
         try:
             self._make_detector()
-            
+
             if self.config.debug:
-                print(f'Detector Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
-                print(f'Detector Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                print(f'Detector Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
-                write_log_info(self.logger, f'Recorder Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
-                write_log_info(self.logger, f'Recorder Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                write_log_info(self.logger, f'Recorder Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                print(f'Detector {self.cam} Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
+                print(f'Detector {self.cam} Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                print(f'Detector {self.cam} Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                write_log_info(self.logger, f'Detector {self.cam} Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
+                write_log_info(self.logger, f'Detector {self.cam} Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                write_log_info(self.logger, f'Detector {self.cam} Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
 
             self._detector_loop()
             
             if self.config.detecting:
                 self.det.release()
                 if self.config.debug:
-                    cv2.destroyWindow(f'det-{self.cam}')
+                    try:
+                        cv2.destroyWindow(f'det-{self.cam}')
+                    except cv2.error as e:
+                        pass
         except Exception as e:
             write_log_exception(self.logger, e)
             self.config.kill = True

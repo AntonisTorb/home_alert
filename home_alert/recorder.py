@@ -104,7 +104,10 @@ class Recorder:
                 self.config.recording = False
                 self.config.detecting = True
                 if self.config.debug:
-                    cv2.destroyWindow(f'cap-{self.cam}')
+                    try:
+                        cv2.destroyWindow(f'cap-{self.cam}')
+                    except cv2.error:
+                        pass
                     print("Stopping recording. Detecting active.")
                 write_log_info(self.logger, "Stopping recording. Detecting active.")
 
@@ -116,12 +119,12 @@ class Recorder:
             self._make_rec_capture()
 
             if self.config.debug:
-                print(f'Recorder Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
-                print(f'Recorder Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                print(f'Recorder Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
-                write_log_info(self.logger, f'Recorder Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
-                write_log_info(self.logger, f'Recorder Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                write_log_info(self.logger, f'Recorder Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                print(f'Recorder {self.cam} Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
+                print(f'Recorder {self.cam} Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                print(f'Recorder {self.cam} Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                write_log_info(self.logger, f'Recorder {self.cam} Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
+                write_log_info(self.logger, f'Recorder {self.cam} Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                write_log_info(self.logger, f'Recorder {self.cam} Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
 
             self._recorder_loop()
             
@@ -130,7 +133,10 @@ class Recorder:
                 if self.rec is not None:
                     self.rec.release()
                 if self.config.debug:
-                    cv2.destroyWindow(f'cap-{self.cam}')
+                    try:
+                        cv2.destroyWindow(f'cap-{self.cam}')
+                    except cv2.error:
+                        pass
         except Exception as e:
             write_log_exception(self.logger, e)
             self.config.kill = True
