@@ -41,3 +41,6 @@ class Config():
         with open(config_path, 'w') as f:
             config = {"0": self.__dict__}
             json.dump(config, f, indent=4)
+
+    def __repr__(self) -> str:
+        return f'self.__dict'

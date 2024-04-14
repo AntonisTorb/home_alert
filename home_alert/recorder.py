@@ -7,7 +7,6 @@ import time
 import cv2
 
 from .configuration import Config
-from .utils import write_log_exception, write_log_info, write_log_error
 
 
 class Recorder:
@@ -64,7 +63,7 @@ class Recorder:
                 if self.config.debug:
                     print("Recorder: No frame received!")
                 if self.bad_frames_counter <= 0:
-                    write_log_error(self.logger, "Recorder: No frames received.")
+                    self.logger.error("Recorder: No frames received.")
                     self.config.kill = True
                 else:
                     self.bad_frames_counter -= 1
@@ -109,7 +108,7 @@ class Recorder:
                     except cv2.error:
                         pass
                     print("Stopping recording. Detecting active.")
-                write_log_info(self.logger, "Stopping recording. Detecting active.")
+                self.logger.info("Stoping recording. Detecting active.")
 
 
     def record(self) -> None:
@@ -122,9 +121,9 @@ class Recorder:
                 print(f'Recorder {self.cam} Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
                 print(f'Recorder {self.cam} Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
                 print(f'Recorder {self.cam} Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
-                write_log_info(self.logger, f'Recorder {self.cam} Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
-                write_log_info(self.logger, f'Recorder {self.cam} Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                write_log_info(self.logger, f'Recorder {self.cam} Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                self.logger.info(f'Recorder {self.cam} Framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
+                self.logger.info(f'Recorder {self.cam} Frame Width: {self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                self.logger.info(f'Recorder {self.cam} Frame Height: {self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
 
             self._recorder_loop()
             
@@ -138,5 +137,5 @@ class Recorder:
                     except cv2.error:
                         pass
         except Exception as e:
-            write_log_exception(self.logger, e)
+            self.logger.exception(e)
             self.config.kill = True

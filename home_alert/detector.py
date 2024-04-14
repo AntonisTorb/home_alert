@@ -6,7 +6,6 @@ import cv2
 import numpy as np
 
 from .configuration import Config
-from .utils import write_log_exception, write_log_info, write_log_error
 
 
 class Detector:
@@ -48,7 +47,7 @@ class Detector:
                 if self.config.debug:
                     print("Detector: No frame received!")
                 if self.bad_frames_counter <= 0:
-                    write_log_error(self.logger, "Detector: No frames received.")
+                    self.logger.error("Detector: No frames received.")
                     self.config.kill = True
                 else:
                     self.bad_frames_counter -= 1
@@ -95,7 +94,7 @@ class Detector:
                     except cv2.error:
                         pass
                     print("Alarm triggered, starting recording.")
-                write_log_info(self.logger, "Alarm triggered, starting recording.")
+                self.logger.info("Alarm triggered, starting recording.")
 
     def detect(self) -> None:
         '''Main loop for the movement detector component.'''
@@ -107,9 +106,9 @@ class Detector:
                 print(f'Detector {self.cam} Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
                 print(f'Detector {self.cam} Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
                 print(f'Detector {self.cam} Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
-                write_log_info(self.logger, f'Detector {self.cam} Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
-                write_log_info(self.logger, f'Detector {self.cam} Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
-                write_log_info(self.logger, f'Detector {self.cam} Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
+                self.logger.info(f'Detector {self.cam} Framerate: {self.det.get(cv2.CAP_PROP_FPS)}')
+                self.logger.info(f'Detector {self.cam} Frame Width: {self.det.get(cv2.CAP_PROP_FRAME_WIDTH)}')
+                self.logger.info(f'Detector {self.cam} Frame Height: {self.det.get(cv2.CAP_PROP_FRAME_HEIGHT)}')
 
             self._detector_loop()
             
@@ -121,5 +120,5 @@ class Detector:
                     except cv2.error as e:
                         pass
         except Exception as e:
-            write_log_exception(self.logger, e)
+            self.logger.exception(e)
             self.config.kill = True
