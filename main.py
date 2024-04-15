@@ -1,4 +1,4 @@
-import asyncio
+from collections import deque
 import logging
 from pathlib import Path
 import threading
@@ -9,42 +9,43 @@ from home_alert import Config, Detector, Recorder, DiscordBot, utils
 
 def main():
 
-    cwd = Path.cwd()
-    config_path = cwd / "config.json"
-    recording_dir_path = cwd / "recordings"
+    cwd: Path = Path.cwd()
+    config_path: Path = cwd / "config.json"
+    recording_dir_path: Path = cwd / "recordings"
     recording_dir_path.mkdir(exist_ok=True)
-    log_path = cwd / "home_alert.log"
-    cameras = 1
-    app_close = False
+    recordings_queue: deque[str] = deque()
+    log_path: Path = cwd / "home_alert.log"
+    cameras: int = 1
+    app_close: bool = False
 
     utils.maintain_log(log_path, 30)
 
-    main_logger = logging.getLogger(__name__)
+    main_logger: logging.Logger = logging.getLogger(__name__)
     logging.basicConfig(filename=log_path.name, 
                         level=logging.INFO,
                         format="%(asctime)s|%(levelname)8s|%(name)s|%(message)s")
 
     main_logger.info("Starting application.")
 
-    configs = []
-    detectors = []
-    recorders = []
-    threads = []
+    configs: list[Config] = []
+    detectors: list[Detector] = []
+    recorders: list[Recorder] = []
+    threads: list[threading.Thread] = []
 
     for cam in range(cameras):
-        config = Config(config_path, cam)
+        config: Config = Config(config_path, cam)
         configs.append(config)
-        detector = Detector(cam, config)
+        detector: Detector = Detector(cam, config)
         detectors.append(detector)
-        detector_thread = threading.Thread(target=detector.detect)
+        detector_thread: threading.Thread = threading.Thread(target=detector.detect)
         threads.append(detector_thread)
-        recorder = Recorder(cam, config, recording_dir_path)
+        recorder: Recorder = Recorder(cam, config, recording_dir_path, recordings_queue)
         recorders.append(recorder)
-        recorder_thread = threading.Thread(target=recorder.record)
+        recorder_thread: threading.Thread = threading.Thread(target=recorder.record)
         threads.append(recorder_thread)
 
-    discord_bot = DiscordBot(recording_dir_path)
-    bot_thread = threading.Thread(target=discord_bot.run_bot)
+    discord_bot: DiscordBot = DiscordBot(recording_dir_path, cameras, configs, recordings_queue)
+    bot_thread: threading.Thread = threading.Thread(target=discord_bot.run_bot)
     
     threads.append(bot_thread)
 
@@ -57,13 +58,23 @@ def main():
 
         for config in configs:
             if config.kill:
-                main_logger.info("Closing application.")
                 app_close = True
 
         if app_close:
             for config in configs:
                 config.kill = True
             discord_bot.kill = True
+
+            while True:
+                finished_threads  = 0
+                for thread in threads:
+                    if not thread.is_alive():
+                        finished_threads += 1
+                if finished_threads == len(threads):
+                    break
+                time.sleep(1)
+                        
+            main_logger.info("Closing application.")
             break
         
         try:

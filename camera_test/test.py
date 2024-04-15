@@ -7,9 +7,9 @@ def test_camera(cam: int, framerates: list[int], sizes: list[tuple[int,int]]) ->
     '''Utility function to test available framerates and frame sizes for your camera(s).
     Produces a `{camera_id}-{timestamp}.log` file for review.'''
 
-    cap = cv2.VideoCapture(cam)
+    cap: cv2.VideoCapture = cv2.VideoCapture(cam)
 
-    timestamp = datetime.datetime.now().timestamp()
+    timestamp: float = datetime.datetime.now().timestamp()
     with open(f'{cam}-{int(timestamp)}.log', "a") as f:
         
         f.write("[FRAMERATE TEST]\r")
@@ -37,11 +37,11 @@ def test_camera(cam: int, framerates: list[int], sizes: list[tuple[int,int]]) ->
 
 if __name__ == "__main__":
 
-    min_framerate = 10
-    max_framerate = 60
-    step = 5
-    framerates = [fr for fr in range(min_framerate, max_framerate + step, step)]
+    min_framerate: int = 10
+    max_framerate: int = 60
+    step: int = 5
+    framerates: list[int] = [fr for fr in range(min_framerate, max_framerate + step, step)]
 
-    sizes = [(640,480), (1280,720), (1920,1080)]
+    sizes: list[tuple[int, int]] = [(640,480), (1280,720), (1920,1080)]
 
     test_camera(0, framerates, sizes)

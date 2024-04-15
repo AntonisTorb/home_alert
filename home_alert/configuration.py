@@ -7,7 +7,7 @@ class Config():
     def __init__(self, config_path: Path, cam: int = 0) -> None:
         '''Configuration class for the application.'''
 
-        self._default_config = {
+        self._default_config: dict[str, bool|int] = {
             "detecting": True,
             "recording": False,
             "debug": True,
@@ -28,11 +28,12 @@ class Config():
                 self.__dict__ = json.load(f)[str(cam)]
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             print("Configuration file not found or corrupted. Creating with default values...")
-            self.__dict__ = deepcopy(self._default_config)
+            self.__dict__: dict = deepcopy(self._default_config)
             self._dump_config(config_path)
 
-        self.recording = False
-        self.kill = False
+        self.cam: int = cam
+        self.recording: bool = False
+        self.kill: bool = False
 
 
     def _dump_config(self, config_path: Path) -> None:

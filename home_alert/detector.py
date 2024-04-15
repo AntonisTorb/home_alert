@@ -3,7 +3,6 @@ import logging
 import time
 
 import cv2
-import numpy as np
 
 from .configuration import Config
 
@@ -13,17 +12,17 @@ class Detector:
     def __init__(self, cam: int, config: Config) -> None:
         '''Detector Class that represents the movement detector component of the application.'''
 
-        self.cam = cam
-        self.config = config
-        self.alerts = 0
-        self.logger = logging.getLogger(__name__)
-        self.bad_frames_counter = 5
-        self.previous_frame = None
+        self.cam: int = cam
+        self.config: Config = config
+        self.alerts: int = 0
+        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.bad_frames_counter: int = 5
+        self.previous_frame: cv2.typing.MatLike|None = None
 
     def _make_detector(self) -> None:
         '''Creates a Video Capture object for the detector component.'''
 
-        self.det = cv2.VideoCapture(self.cam)
+        self.det: cv2.VideoCapture = cv2.VideoCapture(self.cam)
         self.det.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.detector_frame_width) 
         self.det.set(cv2.CAP_PROP_FRAME_HEIGHT, self.config.detector_frame_height)
         self.det.set(cv2.CAP_PROP_FPS, self.config.detector_frame_rate)
@@ -58,12 +57,12 @@ class Detector:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.GaussianBlur(frame, (21,21), 0)
 
-            if type(self.previous_frame) != np.ndarray:
+            if type(self.previous_frame) == type(None):
                 self.previous_frame = frame
                 continue
                 
-            difference = cv2.absdiff(frame, self.previous_frame)
-            threshold = cv2.threshold(difference, self.config.detector_threshold, 255, cv2.THRESH_BINARY)[1]
+            difference: cv2.typing.MatLike = cv2.absdiff(frame, self.previous_frame)
+            threshold: cv2.typing.MatLike = cv2.threshold(difference, self.config.detector_threshold, 255, cv2.THRESH_BINARY)[1]
             if (threshold_mean := round(threshold.mean(), 2)) > self.config.alert_threshold:
                 self.alerts += 1
             else:
@@ -73,8 +72,8 @@ class Detector:
             if self.config.debug:
                 if threshold_mean > 0:
                     print(f'{threshold_mean = }')
-                cur_date = datetime.datetime.now()
-                cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+                cur_date: datetime.datetime = datetime.datetime.now()
+                cur_date: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
                 cv2.putText(threshold, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
                 cv2.imshow(f'det-{self.cam}', threshold)
                 cv2.waitKey(1)
