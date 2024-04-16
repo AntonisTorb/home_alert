@@ -1,8 +1,9 @@
+import asyncio
 from collections import deque
+from functools import wraps
 import logging
 import os
 from pathlib import Path
-import asyncio
 
 import discord
 from discord.ext import tasks
@@ -49,6 +50,9 @@ class DiscordBot:
 
 
     async def check_files(self) -> None:
+        '''Asynchronous checking if files are available to upload.
+        Sends notification to Admin when an alarm has been triggered.
+        '''
 
         for index, config in enumerate(self.configs):
             if config.recording:
@@ -62,6 +66,7 @@ class DiscordBot:
 
 
     async def killswitch_check(self):
+        '''Asynchronous checking whether the close command has been sent. Closes the connection if True.'''
 
         if self.kill:
             await self.status_control_channel.send("Closing application, see you later!")
@@ -69,6 +74,7 @@ class DiscordBot:
 
 
     async def status_report(self) -> None:
+        '''Sends message to the status-control channel notifying of the status of the Detector and Recorder component(s).'''
 
         message: str = ""
         for config in self.configs:
@@ -77,6 +83,9 @@ class DiscordBot:
 
 
     async def start_detecting(self) -> None:
+        '''Signals the Detector component(s) to d start detecting. 
+        Sends message to the status-control channel notifying of the above.
+        '''
 
         for config in self.configs:
             if config.detecting:
@@ -87,6 +96,10 @@ class DiscordBot:
 
 
     async def stop_recording(self) -> None:
+        '''Signals the Recorder and Detector component(s) to stop recording and start detecting.
+        Resets the alarm notificatioin booleans to False.
+        Sends message to the status-control channel notifying of the above.
+        '''
 
         for config in self.configs:
             if config.recording:
@@ -94,12 +107,41 @@ class DiscordBot:
                 config.detecting = True
                 await self.status_control_channel.send(f'Recording stopped for camera {config.cam}, now detecting.')
             self.notified_alarm: list[bool] = [False for _ in self.configs]
+ 
+
+    async def check_log(self, message_content: str):
+        '''Sends message to the status-control channel with the last lines of the log file.
+        Amount of lines is specified by the user in `message_content`.'''
+
+        if len((message_parts := message_content.split(" "))) != 2:
+            return
+        
+        lines = int(message_parts[1])
+        
+        log_handler: logging.FileHandler = self.logger.parent.handlers[0]
+        with open(log_handler.baseFilename) as f:
+            log_content: list[str] = f.readlines()
+            log_to_return: str = "".join(log_content[-lines:])
+        await self.status_control_channel.send(f'```{log_to_return}```')
 
 
     def run_bot(self) -> None:
         '''Runs the discord bot component.'''
+
+        def exception_handler_async(func):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                try:
+                    await func(*args, **kwargs)
+                except Exception as e:
+                    self.logger.exception(e)
+                    if self.status_control_channel is not None:
+                        message = f'Error: {type(e).__name__}, {str(e)}\rFor more information please check the log file.'
+                        await self.status_control_channel.send(message)
+            return wrapper
         
         @tasks.loop(seconds=1)
+        @exception_handler_async
         async def tasks_loop():
 
             # await self.check_files()
@@ -107,6 +149,7 @@ class DiscordBot:
             await asyncio.gather(self.check_files(), self.killswitch_check())
 
         @self.client.event
+        @exception_handler_async
         async def on_connect():
 
             while self.status_control_channel is None and not self.kill:
@@ -126,11 +169,13 @@ class DiscordBot:
             if self.kill:  # If the above loops hang and the application is terminated with KeyboardInterrupt from main thread.
                 return
             
-            self.logger.info("Status control channel and camera recording channels received.")
+            print("Status control and camera recording channels received.")
+            self.logger.info("Status control and camera recording channels received.")
             self.logger.info("Discord bot online.")
-            await self.status_control_channel.send("Bot Connected! Awaiting commands. Type !help if you're confused!")
+            await self.status_control_channel.send("Bot is online! Type !help for a list of available commands.")
 
         @self.client.event
+        @exception_handler_async
         async def on_message(message: discord.Message):
 
             if message.channel != self.status_control_channel:
@@ -156,11 +201,18 @@ class DiscordBot:
             if message.content.lower() == "!stoprecording":
                 await self.stop_recording()
                 return
+            if message.content.lower().startswith("!checklog"):
+                await self.check_log(message.content.lower())
+                return
 
         @self.client.event
+        @exception_handler_async
         async def on_ready():
 
             await tasks_loop.start()
-            
-        self.client.run(self.token)
+
+        try:
+            self.client.run(self.token)
+        except Exception as e:
+            self.logger.exception(e)
         self.logger.info("Discord bot offline.")
