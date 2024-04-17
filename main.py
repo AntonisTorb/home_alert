@@ -18,7 +18,7 @@ def main():
     cameras: int = 1
     app_close: bool = False
 
-    utils.maintain_log(log_path, 30)
+    utils.maintain_log(log_path, days=30)
 
     main_logger: logging.Logger = logging.getLogger(__name__)
     logging.basicConfig(filename=log_path.name, 

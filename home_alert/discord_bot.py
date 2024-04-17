@@ -22,19 +22,21 @@ class DiscordBot:
         self.configs: list[Config] = configs
         self.recordings_queue: deque[str] = recordings_queue
 
-        self.notified_alarm: list[bool] = [False for _ in self.configs]
-
         self.logger: logging.Logger = logging.getLogger(__name__)
-
-        self.intents:discord.Intents = discord.Intents.default()
-        self.intents.messages = True
-        self.intents.message_content = True
-        self.client: discord.Client = discord.Client(intents=self.intents)
-        self.ping_role: discord.Role|None = None
-        
         self.kill: bool = False
 
         try:
+            self.uploaded_rec_path: Path = recording_dir_path / "uploaded"
+            self.uploaded_rec_path.mkdir(exist_ok=True)
+
+            self.notified_alarm: list[bool] = [False for _ in self.configs]
+
+            self.intents:discord.Intents = discord.Intents.default()
+            self.intents.messages = True
+            self.intents.message_content = True
+            self.client: discord.Client = discord.Client(intents=self.intents)
+            self.ping_role: discord.Role|None = None
+
             load_dotenv()
             self.token: str|None = os.getenv("TOKEN")
             self.guild_id = int(os.getenv("GUILD_ID"))
@@ -48,11 +50,9 @@ class DiscordBot:
             self.logger.exception(e)
             self.kill = True
 
-
-    async def check_files(self) -> None:
-        '''Asynchronous checking if files are available to upload.
-        Sends notification to Admin when an alarm has been triggered.
-        '''
+    
+    async def check_notification_send(self):
+        '''Asynchronous checking if the alarm has been activated sending Discord notification if not sent.'''
 
         for index, config in enumerate(self.configs):
             if config.recording:
@@ -62,14 +62,34 @@ class DiscordBot:
                 if not self.notified_alarm[index]:
                     await self.status_control_channel.send(f'{self.ping_role.mention} Alarm triggered for camera {config.cam}!')
                     self.notified_alarm[index] = True
-        # Actually check for files and upload them.
+
+
+    async def check_files_upload(self):
+        '''Asynchronous checking if files are available to upload, attaching them and sending message to appropriate Discord channel,
+        and moving them to `uploaded` directory once finished.
+        '''
+
+        if self.recordings_queue:
+            file_path: Path = self.recording_dir_path / self.recordings_queue.popleft()
+            filename: str = file_path.name
+            camera, timestamp = filename.split(".")[0].split("-")
+            file_to_attach: discord.File = discord.File(file_path)
+            await self.cam_rec_channels[int(camera)].send(content=f'<t:{timestamp}:f>' , file=file_to_attach)
+            file_path.rename(self.uploaded_rec_path / filename)
+
+
+    async def alert_check(self) -> None:
+        '''Asynchronous checking if the alert has been triggered, notification and file upload management.'''
+
+        await asyncio.gather(self.check_notification_send(), self.check_files_upload())
 
 
     async def killswitch_check(self):
         '''Asynchronous checking whether the close command has been sent. Closes the connection if True.'''
 
         if self.kill:
-            await self.status_control_channel.send("Closing application, see you later!")
+            if self.status_control_channel is not None:
+                await self.status_control_channel.send("Closing application, see you later!")
             await self.client.close()
 
 
@@ -144,9 +164,7 @@ class DiscordBot:
         @exception_handler_async
         async def tasks_loop():
 
-            # await self.check_files()
-            # await self.killswitch_check()
-            await asyncio.gather(self.check_files(), self.killswitch_check())
+            await asyncio.gather(self.alert_check(), self.killswitch_check())
 
         @self.client.event
         @exception_handler_async
