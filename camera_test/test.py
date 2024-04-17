@@ -40,8 +40,7 @@ if __name__ == "__main__":
     min_framerate: int = 10
     max_framerate: int = 60
     step: int = 5
-    framerates: list[int] = [fr for fr in range(min_framerate, max_framerate + step, step)]
-
     sizes: list[tuple[int, int]] = [(640,480), (1280,720), (1920,1080)]
-
+    
+    framerates: list[int] = [fr for fr in range(min_framerate, max_framerate + step, step)]
     test_camera(0, framerates, sizes)

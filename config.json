@@ -1,6 +1,6 @@
 {
     "0": {
-        "detecting": true,
+        "detecting": false,
         "recording": false,
         "debug": true,
         "max_file_size_mb": 25,

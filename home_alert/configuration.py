@@ -8,7 +8,7 @@ class Config():
         '''Configuration class for the application.'''
 
         self._default_config: dict[str, bool|int] = {
-            "detecting": True,
+            "detecting": False,
             "recording": False,
             "debug": True,
             "max_file_size_mb": 25,
