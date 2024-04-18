@@ -34,7 +34,7 @@ class Detector:
         while True:
             if self.config.kill:
                 break
-            if self.config.recording and not self.config.detecting:
+            if not self.config.detecting:
                 time.sleep(0.5)
                 continue
 
@@ -78,7 +78,6 @@ class Detector:
                 cv2.imshow(f'det-{self.cam}', threshold)
                 cv2.waitKey(1)
 
-            
             self.previous_frame = frame
 
             if self.alerts > self.config.alerts_to_trigger_recording:
@@ -94,6 +93,7 @@ class Detector:
                         pass
                     print("Alarm triggered, starting recording.")
                 self.logger.info("Alarm triggered, starting recording.")
+
 
     def detect(self) -> None:
         '''Main loop for the movement detector component.'''

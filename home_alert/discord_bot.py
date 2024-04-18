@@ -111,7 +111,7 @@ class DiscordBot:
 
 
     async def start_detecting(self) -> None:
-        '''Signals the Detector component(s) to d start detecting. 
+        '''Signals the Detector component(s) to start detecting. 
         Sends message to the status-control channel notifying of the above.
         '''
 
@@ -121,6 +121,19 @@ class DiscordBot:
             else:
                 config.detecting = True
                 await self.status_control_channel.send(f'Camera {config.cam} now detecting.')
+
+
+    async def stop_detecting(self):
+        '''Signals the Detector component(s) to stop detecting. 
+        Sends message to the status-control channel notifying of the above.
+        '''
+
+        for config in self.configs:
+            if not config.detecting:
+                await self.status_control_channel.send(f'Camera {config.cam} already not detecting.')
+            else:
+                config.detecting = False
+                await self.status_control_channel.send(f'Camera {config.cam} now not detecting.')
 
 
     async def stop_recording(self) -> None:
@@ -224,6 +237,9 @@ class DiscordBot:
                 return
             if message.content.lower() == "!detect":
                 await self.start_detecting()
+                return
+            if message.content.lower() == "!stopdetecting":
+                await self.stop_detecting()
                 return
             if message.content.lower() == "!stoprecording":
                 await self.stop_recording()

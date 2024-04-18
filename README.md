@@ -55,8 +55,8 @@ Bellow are the settings, default values, as well as an explanation of what each 
 - `"detector_frame_width": 640`: The width of the frames captured by the Detector in pixels.
 - `"detector_frame_height": 480`: The height of the frames captured by the Detector in pixels.
 - `"detector_frame_rate": 10`: The rate at which the Detector captures frames in frames per second.
-- `"detector_threshold": 5`: Represents the sensitivity of the Detector and the values should be between `1` and `255`. The lower the value, the higher the sensitivity. You can change this depending on the distance to the main point you are detecting and the amount of movement expected compared to the total detection space.
-- `"alert_threshold": 10`: Represents the minimum threshold required to recognize as sufficient movement for an alert. You can set this after using the `debug` mode and observing the threshold values in the console window by performing actions in front of the webcam.
+- `"detector_threshold": 5`: Represents the scaling of the difference between frames captured by the detector. The values should be between `1` and `255`, and any difference higher than the provided amount wil be scaled to 255. You can change this depending on the distance to the main point you are detecting and the amount of movement expected compared to the total detection space.
+- `"alert_threshold": 10`: Represents the sensitivity of the detector, and it is the minimum mean threshold required to recognize as sufficient movement for an alert. The lower the value the higher the sensitivity. You can set this after using the `debug` mode and observing the threshold values in the console window by performing actions in front of the webcam.
 - `"alerts_to_trigger_recording": 5: "green"`: The amount of cumulative values over the `alert_threshold` in order to trigger the alert. You can set this depending on the Detector framerate. Keep in mind that if no movement above the threshhold is detected between frames, the internal counter for this value will decrease over time.
 - `"recorder_frame_width": 1280`: The width of the frames captured by the Recorder in pixels.
 - `"recorder_frame_height": 720`: The height of the frames captured by the Recorder in pixels.
@@ -91,9 +91,10 @@ As for the server and channel IDs, you can get them from the Discord URL after y
 At any point when the application is running, you can use the `!help` command in the `status-control` channel to get a list of all the available commands. Here are all of them:
 
 - `!status`: Returns the status of each Detector and Recorder component.
-- `!detect`: Start detecting.
 - `!close`: Close application.
-- `!stoprecording`: Stop recording and start detecting if alarm has been triggered.
+- `!detect`: Start detecting with all cameras.
+- `!stopdetecting`: Stop detecting with all cameras.
+- `!stoprecording`: Stop recording and start detecting with all cameras.
 - `!checklog lines`: Replace `lines` with the amount of lines you need from the end of the `log file`.
 - `!clear`: Deletes all messages in the `status-control` Discord channel.
 

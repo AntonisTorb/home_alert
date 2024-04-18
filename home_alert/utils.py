@@ -42,9 +42,10 @@ def maintain_log(log_path: Path|str, days: int) -> None:
 
 DISCORD_HELP = '''# Help:
 `!status`           :     Returns the status of each Detector and Recorder component.
-`!detect`           :     Start detecting.
 `!close`            :     Close application.
-`!stoprecording`    :     Stop recording and start detecting if alarm has been triggered.
-`!checklog lines`   :     Replace `lines` with the amount of lines you need from the end of the `log file`.
+`!detect`           :     Start detecting with all cameras.
+`!stopdetecting`    :     Stop detecting with all cameras.
+`!stoprecording`    :     Stop recording and start detecting with all cameras.
+`!checklog lines`   :     Returns lines from the end of the `log file`. Replace `lines` with the amount of lines you need.
 `!clear`            :     Deletes all messages in the `status-control` Discord channel.
 '''
