@@ -3,7 +3,7 @@ A home intruder alert system using webcams with Discord integration. It detects,
 
 The application has 3 main components:
 - The Detector, that captures frames from the webcam(s), comparing them to the previous frame in order to determine if there was sufficient difference between them, activating the alert.
-- The Recorder, that captures frames from the webcam(s) and creates timestamped video files if the alert has been triggered by the Detector.
+- The Recorder, that captures frames from the webcam(s) and creates timestamped video files if the alert has been triggered by the Detector. The video files have file names with the following format: `camera id-timestamp.mp4`.
 - The Discord bot, that provides status updates and notifications, uploads any available recordings and provides configuration options in the form of bot commands.
 
 A test script is also provided in order to determine the configuration properties of your webcam(s).
