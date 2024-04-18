@@ -41,10 +41,9 @@ def maintain_log(log_path: Path|str, days: int) -> None:
         f.write(new_log)
 
 DISCORD_HELP = '''# Help:
-```
-!status           :     Returns the status of each Detector and Recorder component.
-!detect           :     Start detecting.
-!close            :     Close application.
-!stoprecording    :     Stop recording and start detecting if alarm has been triggered.
-!checklog `lines` :     Replace `lines` with `integer`. Returns the last lines of the `log file`.
-```'''
+`!status`           :     Returns the status of each Detector and Recorder component.
+`!detect`           :     Start detecting.
+`!close`            :     Close application.
+`!stoprecording`    :     Stop recording and start detecting if alarm has been triggered.
+`!checklog lines`   :     Replace `lines` with the amount of lines you need from the end of the `log file`.
+'''

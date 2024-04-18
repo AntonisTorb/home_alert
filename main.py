@@ -1,3 +1,4 @@
+import argparse
 from collections import deque
 import logging
 from pathlib import Path
@@ -9,13 +10,21 @@ from home_alert import Config, Detector, Recorder, DiscordBot, utils
 
 def main():
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--cameras", type=int, help="Amount of webcams.", required=False)
+    args = parser.parse_args()
+
+    if args.cameras is not None or type(args.cameras) != type(int):
+        cameras: int = args.cameras
+    else:
+        cameras: int = 1
+
     cwd: Path = Path.cwd()
     config_path: Path = cwd / "config.json"
     recording_dir_path: Path = cwd / "recordings"
     recording_dir_path.mkdir(exist_ok=True)
     recordings_queue: deque[str] = deque()
     log_path: Path = cwd / "home_alert.log"
-    cameras: int = 1
     app_close: bool = False
 
     utils.maintain_log(log_path, days=30)
@@ -35,10 +44,12 @@ def main():
     for cam in range(cameras):
         config: Config = Config(config_path, cam)
         configs.append(config)
+
         detector: Detector = Detector(cam, config)
         detectors.append(detector)
         detector_thread: threading.Thread = threading.Thread(target=detector.detect)
         threads.append(detector_thread)
+        
         recorder: Recorder = Recorder(cam, config, recording_dir_path, recordings_queue)
         recorders.append(recorder)
         recorder_thread: threading.Thread = threading.Thread(target=recorder.record)
