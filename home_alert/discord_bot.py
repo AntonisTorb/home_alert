@@ -29,7 +29,7 @@ class DiscordBot:
             self.uploaded_rec_path: Path = recording_dir_path / "uploaded"
             self.uploaded_rec_path.mkdir(exist_ok=True)
 
-            self.notified_alarm: list[bool] = [False for _ in self.configs]
+            self.notified_alert: list[bool] = [False for _ in self.configs]
 
             self.intents:discord.Intents = discord.Intents.default()
             self.intents.messages = True
@@ -66,16 +66,16 @@ class DiscordBot:
 
     
     async def check_notification_send(self):
-        '''Asynchronous checking if the alarm has been activated sending Discord notification if not sent.'''
+        '''Asynchronous checking if the alert has been activated sending Discord notification if not sent.'''
 
         for index, config in enumerate(self.configs):
             if config.recording:
                 if self.ping_role is  None:
                     guild: discord.Guild = self.client.get_guild(self.guild_id)
                     self.ping_role = discord.utils.get(guild.roles, name="Admin")
-                if not self.notified_alarm[index]:
-                    await self.status_control_channel.send(f'{self.ping_role.mention} Alarm triggered for camera {config.cam}!')
-                    self.notified_alarm[index] = True
+                if not self.notified_alert[index]:
+                    await self.status_control_channel.send(f'{self.ping_role.mention} Alert triggered for camera {config.cam}!')
+                    self.notified_alert[index] = True
 
 
     async def check_files_upload(self):
@@ -106,7 +106,10 @@ class DiscordBot:
 
         message: str = "# Status\r"
         for config in self.configs:
-            message = f'{message}## Camera {config.cam}:\r- Detecting: {config.detecting}\r- Recording: {config.recording}\r'
+            message = f'''{message}## Camera {config.cam}:\r`Detecting: {config.detecting}`\r
+`Recording: {config.recording}`\r`Detector threshold: {config.detector_threshold}`\r
+`Alert threshold: {config.alert_threshold}`\r'''
+            
         await self.status_control_channel.send(message[:-1])
 
 
@@ -138,7 +141,7 @@ class DiscordBot:
 
     async def stop_recording(self) -> None:
         '''Signals the Recorder and Detector component(s) to stop recording and start detecting.
-        Resets the alarm notificatioin booleans to False.
+        Resets the alert notificatioin booleans to False.
         Sends message to the status-control channel notifying of the above.
         '''
 
@@ -147,14 +150,49 @@ class DiscordBot:
                 config.recording = False
                 config.detecting = True
                 await self.status_control_channel.send(f'Recording stopped for camera {config.cam}, now detecting.')
-            self.notified_alarm: list[bool] = [False for _ in self.configs]
+            self.notified_alert: list[bool] = [False for _ in self.configs]
  
+
+    async def set_detector_threshold(self, message_content: str):
+        '''Updates the detector threshold value for the specified camera.
+        Camera and new value specified in `message_content`.
+        '''
+
+        if len((message_parts := message_content.split(" "))) != 3:
+            self.status_control_channel.send("Command not recognized, type `!help` for a list of commands.")
+            return
+        
+        cam = int(message_parts[1])
+        detector_threshold = int(message_parts[2])
+        
+        self.configs[cam].detector_threshold = detector_threshold
+
+        await self.status_control_channel.send(f'Detector threshold for camera {cam} set to {detector_threshold}.')
+
+
+    async def set_alert_threshold(self, message_content: str):
+        '''Updates the alert threshold value for the specified camera.
+        Camera and new value specified in `message_content`.
+        '''
+
+        if len((message_parts := message_content.split(" "))) != 3:
+            self.status_control_channel.send("Command not recognized, type `!help` for a list of commands.")
+            return
+        
+        cam = int(message_parts[1])
+        alert_threshold = int(message_parts[2])
+        
+        self.configs[cam].alert_threshold = alert_threshold
+
+        await self.status_control_channel.send(f'Detector threshold for camera {cam} set to {alert_threshold}.')
+
 
     async def check_log(self, message_content: str):
         '''Sends message to the status-control channel with the last lines of the log file.
         Amount of lines is specified by the user in `message_content`.'''
 
         if len((message_parts := message_content.split(" "))) != 2:
+            self.status_control_channel.send("Command not recognized, type `!help` for a list of commands.")
             return
         
         lines = int(message_parts[1])
@@ -228,28 +266,26 @@ class DiscordBot:
             
             if message.content.lower() == "!help":
                 await self.status_control_channel.send(DISCORD_HELP)
-                return
-            if message.content.lower() == "!status":
+            elif message.content.lower() == "!status":
                 await self.status_report()
-                return
-            if message.content.lower() == "!close":
+            elif message.content.lower() == "!close":
                 self.kill = True
-                return
-            if message.content.lower() == "!detect":
+            elif message.content.lower() == "!detect":
                 await self.start_detecting()
-                return
-            if message.content.lower() == "!stopdetecting":
+            elif message.content.lower() == "!stopdetecting":
                 await self.stop_detecting()
-                return
-            if message.content.lower() == "!stoprecording":
+            elif message.content.lower() == "!stoprecording":
                 await self.stop_recording()
-                return
-            if message.content.lower().startswith("!checklog"):
+            elif message.content.lower().startswith("!setdetectorthreshold"):
+                await self.set_detector_threshold(message.content.lower())
+            elif message.content.lower().startswith("!setalertthreshold"):
+                await self.set_alert_threshold(message.content.lower())
+            elif message.content.lower().startswith("!checklog"):
                 await self.check_log(message.content.lower())
-                return
-            if message.content.lower() == "!clear":
+            elif message.content.lower() == "!clear":
                 await self.clear_channel()
-                return
+            else:
+                await self.status_control_channel.send("Command not recognized, type `!help` for a list of commands.")
 
         @self.client.event
         @exception_handler_async

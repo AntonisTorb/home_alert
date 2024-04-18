@@ -91,8 +91,8 @@ class Detector:
                         cv2.destroyWindow(f'det-{self.cam}')
                     except cv2.error:
                         pass
-                    print("Alarm triggered, starting recording.")
-                self.logger.info("Alarm triggered, starting recording.")
+                    print("Alert triggered, starting recording.")
+                self.logger.info("Alert triggered, starting recording.")
 
 
     def detect(self) -> None:

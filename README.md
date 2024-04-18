@@ -4,7 +4,7 @@ A home intruder alert system using webcams with Discord integration. It detects,
 The application has 3 main components:
 - The Detector, that captures frames from the webcam(s), comparing them to the previous frame in order to determine if there was sufficient difference between them, activating the alert.
 - The Recorder, that captures frames from the webcam(s) and creates timestamped video files if the alert has been triggered by the Detector. The video files have file names with the following format: `camera id-timestamp.mp4`.
-- The Discord bot, that provides status updates and notifications, uploads any available recordings and provides configuration options in the form of bot commands.
+- The Discord bot, that provides status updates and notifications, uploads any available recordings and provides configuration options in the form of bot commands. In order for the bot to work, it needs at least 2 channels, one for status updates and commands(`status-control`), and one for the recording uploads(`cam-0-recordings`). The channel names of course can be different than the suggested. Please also note that recordings from different cameras get uploaded to different channels. If you are using more than one camera, please create the appropriate amount of recording channels.
 
 A test script is also provided in order to determine the configuration properties of your webcam(s).
 
@@ -55,9 +55,9 @@ Bellow are the settings, default values, as well as an explanation of what each 
 - `"detector_frame_width": 640`: The width of the frames captured by the Detector in pixels.
 - `"detector_frame_height": 480`: The height of the frames captured by the Detector in pixels.
 - `"detector_frame_rate": 10`: The rate at which the Detector captures frames in frames per second.
-- `"detector_threshold": 5`: Represents the scaling of the difference between frames captured by the detector. The values should be between `1` and `255`, and any difference higher than the provided amount wil be scaled to 255. You can change this depending on the distance to the main point you are detecting and the amount of movement expected compared to the total detection space.
+- `"detector_threshold": 5`: Represents the scaling of the difference between frames captured by the detector. The values should be between `1` and `255`, and any difference higher than the provided amount will be scaled to 255. You can change this depending on the distance to the main point you are detecting, environmental conditions, such as lighting, and the amount of movement expected compared to the total detection space.
 - `"alert_threshold": 10`: Represents the sensitivity of the detector, and it is the minimum `mean threshold value` required to recognize as sufficient movement for an alert. The lower the value the higher the sensitivity. You can set this after using the `debug` mode and observing the threshold values in the console window by performing actions in front of the webcam.
-- `"alerts_to_trigger_recording": 5`: The amount of cumulative values over the `alert_threshold` in order to trigger the alert. You can set this depending on the Detector framerate. Keep in mind that if no movement above the threshhold is detected between frames, the internal counter for this value will decrease over time.
+- `"alerts_to_trigger_recording": 5`: The amount of cumulative values over the `alert_threshold` in order to trigger the alert. You can set this depending on the Detector framerate. Keep in mind that if no movement above the threshold is detected between frames, the internal counter for this value will decrease over time.
 - `"recorder_frame_width": 1280`: The width of the frames captured by the Recorder in pixels.
 - `"recorder_frame_height": 720`: The height of the frames captured by the Recorder in pixels.
 - `"recorder_frame_rate": 30`: The rate at which the Recorder captures frames in frames per second.
@@ -95,7 +95,9 @@ At any point when the application is running, you can use the `!help` command in
 - `!detect`: Start detecting with all cameras.
 - `!stopdetecting`: Stop detecting with all cameras.
 - `!stoprecording`: Stop recording and start detecting with all cameras.
-- `!checklog lines`: Replace `lines` with the amount of lines you need from the end of the `log file`.
+- `!setdetectorthreshold camera value`: Set a new detector threshold value for the specified camera.
+- `!setalertthreshold camera value` : Set a new alert threshold value for the specified camera.
+- `!checklog lines`: Returns lines from the end of the `log file`. Replace `lines` with the amount of lines you need.
 - `!clear`: Deletes all messages in the `status-control` Discord channel.
 
 

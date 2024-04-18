@@ -41,11 +41,13 @@ def maintain_log(log_path: Path|str, days: int) -> None:
         f.write(new_log)
 
 DISCORD_HELP = '''# Help:
-`!status`           :     Returns the status of each Detector and Recorder component.
-`!close`            :     Close application.
-`!detect`           :     Start detecting with all cameras.
-`!stopdetecting`    :     Stop detecting with all cameras.
-`!stoprecording`    :     Stop recording and start detecting with all cameras.
-`!checklog lines`   :     Returns lines from the end of the `log file`. Replace `lines` with the amount of lines you need.
-`!clear`            :     Deletes all messages in the `status-control` Discord channel.
+`!status`                           : Returns the status of each Detector and Recorder component.
+`!close`                            : Close application.
+`!detect`                           : Start detecting with all cameras.
+`!stopdetecting`                    : Stop detecting with all cameras.
+`!stoprecording`                    : Stop recording and start detecting with all cameras.
+`!setdetectorthreshold camera value`: Set a new detector threshold value for the specified camera.
+`!setalertthreshold camera value`   : Set a new alert threshold value for the specified camera.
+`!checklog lines`                   : Returns lines from the end of the `log file`. Replace `lines` with the amount of lines you need.
+`!clear`                            : Deletes all messages in the `status-control` Discord channel.
 '''
