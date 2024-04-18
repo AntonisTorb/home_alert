@@ -50,6 +50,20 @@ class DiscordBot:
             self.logger.exception(e)
             self.kill = True
 
+
+    async def clear_channel(self):
+        '''Asynchronous deleting all messages in the `status-control` Discord channel.'''
+
+        msg_counter: int = 0
+        while True:
+            messages: list[discord.Message] = [message async for message in self.status_control_channel.history()]
+            msg_counter += len(messages)
+            if messages:
+                await self.status_control_channel.delete_messages(messages)
+            else:
+                await self.status_control_channel.send(f'{msg_counter} message(s) deleted.')
+                break
+
     
     async def check_notification_send(self):
         '''Asynchronous checking if the alarm has been activated sending Discord notification if not sent.'''
@@ -196,8 +210,8 @@ class DiscordBot:
             if message.author == self.client.user or not message.content.startswith("!"):
                 return
             
-            print(message)
-            print(message.content)
+            # print(message)
+            # print(message.content)
             
             if message.content.lower() == "!help":
                 await self.status_control_channel.send(DISCORD_HELP)
@@ -216,6 +230,9 @@ class DiscordBot:
                 return
             if message.content.lower().startswith("!checklog"):
                 await self.check_log(message.content.lower())
+                return
+            if message.content.lower() == "!clear":
+                await self.clear_channel()
                 return
 
         @self.client.event

@@ -95,6 +95,7 @@ At any point when the application is running, you can use the `!help` command in
 - `!close`: Close application.
 - `!stoprecording`: Stop recording and start detecting if alarm has been triggered.
 - `!checklog lines`: Replace `lines` with the amount of lines you need from the end of the `log file`.
+- `!clear`: Deletes all messages in the `status-control` Discord channel.
 
 
 ## Thank you and enjoy!
