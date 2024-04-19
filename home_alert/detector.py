@@ -85,7 +85,7 @@ class Detector:
                 self.config.detecting = False
                 self.logger.info(f'Detector {self.cam} alert triggered, starting recording.')
             
-            if not self.detecting:
+            if not self.config.detecting:
                 self.det.release()
                 self.previous_frame = None
                 self.alerts = 0
