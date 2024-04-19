@@ -44,9 +44,9 @@ class Detector:
 
             if not ret:
                 if self.config.debug:
-                    print("Detector: No frame received!")
+                    print(f'Detector {self.cam}: No frame received!')
                 if self.bad_frames_counter <= 0:
-                    self.logger.error("Detector: No frames received.")
+                    self.logger.error(f'Detector {self.cam}: No frames received.')
                     self.config.kill = True
                 else:
                     self.bad_frames_counter -= 1
@@ -71,7 +71,7 @@ class Detector:
 
             if self.config.debug:
                 if threshold_mean > 0:
-                    print(f'{threshold_mean = }')
+                    print(f'Detector {self.cam} {threshold_mean = }')
                 cur_date: datetime.datetime = datetime.datetime.now()
                 cur_date: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
                 cv2.putText(threshold, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
@@ -81,18 +81,20 @@ class Detector:
             self.previous_frame = frame
 
             if self.alerts > self.config.alerts_to_trigger_recording:
+                self.config.recording = True
+                self.config.detecting = False
+                self.logger.info(f'Detector {self.cam} alert triggered, starting recording.')
+            
+            if not self.detecting:
                 self.det.release()
                 self.previous_frame = None
                 self.alerts = 0
-                self.config.recording = True
-                self.config.detecting = False
                 if self.config.debug:
                     try:
                         cv2.destroyWindow(f'det-{self.cam}')
                     except cv2.error:
                         pass
-                    print("Alert triggered, starting recording.")
-                self.logger.info("Alert triggered, starting recording.")
+                    print(f'Camera {self.cam} alert triggered, starting recording.')
 
 
     def detect(self) -> None:

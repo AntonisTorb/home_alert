@@ -64,9 +64,9 @@ class Recorder:
             ret, frame = self.cap.read()
             if not ret:
                 if self.config.debug:
-                    print("Recorder: No frame received!")
+                    print(f'Recorder {self.cam}: No frame received!')
                 if self.bad_frames_counter <= 0:
-                    self.logger.error("Recorder: No frames received.")
+                    self.logger.error(f'Recorder {self.cam}: No frames received.')
                     self.config.kill = True
                 else:
                     self.bad_frames_counter -= 1
@@ -113,8 +113,8 @@ class Recorder:
                         cv2.destroyWindow(f'cap-{self.cam}')
                     except cv2.error:
                         pass
-                    print("Stopping recording. Detecting active.")
-                self.logger.info("Stoping recording. Detecting active.")
+                    print(f'Camera {self.cam} stopping recording. Detecting active.')
+                self.logger.info(f'Camera {self.cam} stoping recording. Detecting active.')
 
 
     def record(self) -> None:
