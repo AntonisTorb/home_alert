@@ -34,6 +34,7 @@ Please check out the following if you want to learn more about the application a
     - Ensure all requirements are installed as instructed above.
     - Open a Terminal/Powershell/Command Line window in the directory of the `camera_test/test.py` file is located as instructed above.
     - Open the `test.py` file in a file editor or IDE of your choice and modify the following fields to your preferences:
+        - `camera_id`: The id of the camera you want to test (starting from 0 and ascending).
         - `min_framerate`: The minimum framerate to check.
         - `max_framerate`: The maximum framerate to check.
         - `step`: The step at which the framerates will be tested between minimum and maximum.

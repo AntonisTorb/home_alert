@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 import time
 
-
 import cv2
 
 from .configuration import Config

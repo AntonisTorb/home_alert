@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from .configuration import Config
 from .utils import DISCORD_HELP
 
+
 class DiscordBot:
 
     def __init__(self, recording_dir_path: Path, cameras: int, configs: list[Config], recordings_queue: deque[str]) -> None:
