@@ -1,4 +1,3 @@
-from copy import deepcopy
 import json
 from pathlib import Path
 
@@ -7,28 +6,26 @@ class Config():
     def __init__(self, config_path: Path, cam: int = 0) -> None:
         '''Configuration class for the application.'''
 
-        self._default_config: dict[str, bool|int] = {
-            "detecting": False,
-            "recording": False,
-            "debug": True,
-            "max_file_size_mb": 25,
-            "detector_frame_width": 640,
-            "detector_frame_height": 480,
-            "detector_frame_rate": 10,
-            "detector_threshold": 5,
-            "alert_threshold": 10,
-            "alerts_to_trigger_recording": 5,
-            "recorder_frame_width": 1280,
-            "recorder_frame_height": 720,
-            "recorder_frame_rate": 30,
-        }
+        # Default configuration values.
+        self.detecting: bool = False
+        self.recording: bool = False
+        self.debug: bool = True
+        self.max_file_size_mb: int = 25
+        self.detector_frame_width: int = 640
+        self.detector_frame_height: int = 480
+        self.detector_frame_rate: int = 10
+        self.detector_threshold: int = 5
+        self.alert_threshold: int = 10
+        self.alerts_to_trigger_recording: int = 5
+        self.recorder_frame_width: int = 1280
+        self.recorder_frame_height: int = 720
+        self.recorder_frame_rate: int = 30
 
         try:
             with open(config_path, 'r') as f:
                 self.__dict__ = json.load(f)[str(cam)]
         except (FileNotFoundError, json.decoder.JSONDecodeError):
             print("Configuration file not found or corrupted. Creating with default values...")
-            self.__dict__: dict = deepcopy(self._default_config)
             self._dump_config(config_path)
 
         self.cam: int = cam

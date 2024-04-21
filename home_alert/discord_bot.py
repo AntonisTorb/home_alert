@@ -248,10 +248,9 @@ class DiscordBot:
             if self.kill:  # If the above loops hang and the application is terminated with KeyboardInterrupt from main thread.
                 return
             
-            print("Status control and camera recording channels received.")
-            self.logger.info("Status control and camera recording channels received.")
-            self.logger.info("Discord bot online.")
-            await self.status_control_channel.send("Bot is online! Type `!help` for a list of available commands.")
+            print("Status control and camera recording channels received. Discord bot online..")
+            self.logger.info("Status control and camera recording channels received. Discord bot online.")
+            await self.status_control_channel.send("**Home Alert** is online! Type `!help` for a list of available commands.")
 
         @self.client.event
         @exception_handler_async
