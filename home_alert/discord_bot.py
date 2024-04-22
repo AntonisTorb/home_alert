@@ -51,6 +51,24 @@ class DiscordBot:
             self.kill = True
 
 
+    async def get_channels(self):
+        '''Asynchronous getting required channels once client is ready.'''
+    
+        while self.status_control_channel is None and not self.kill:
+            self.status_control_channel = self.client.get_channel(self.status_control_channel_id)
+            if self.status_control_channel is None:
+                print("Could not get status control channel. Retrying...")
+                self.logger.error("Could not get status control channel. Retrying...")
+                await asyncio.sleep(1)
+
+        while (self.cam_rec_channels is None or None in self.cam_rec_channels) and not self.kill:
+            self.cam_rec_channels = [self.client.get_channel(channel_id) for channel_id in self.cam_rec_channel_ids]
+            if self.cam_rec_channels is None or None in self.cam_rec_channels:
+                print("Could not get status camera recording channels. Retrying...")
+                self.logger.error("Could not get status camera recording channels. Retrying...")
+                await asyncio.sleep(1)
+
+            
     async def clear_channel(self):
         '''Asynchronous deleting all messages in the `status-control` Discord channel.'''
 
@@ -225,32 +243,6 @@ class DiscordBot:
 
             await asyncio.gather(self.check_files_upload(), self.check_notification_send(), self.killswitch_check())
 
-        @self.client.event
-        @exception_handler_async
-        async def on_connect():
-
-            while self.status_control_channel is None and not self.kill:
-                await asyncio.sleep(1)
-                self.status_control_channel = self.client.get_channel(self.status_control_channel_id)
-                if self.status_control_channel is None:
-                    print("Could not get status control channel. Retrying...")
-                    self.logger.error("Could not get status control channel. Retrying...")
-                await asyncio.sleep(1)
-
-            while (self.cam_rec_channels is None or None in self.cam_rec_channels) and not self.kill:
-                await asyncio.sleep(1)
-                self.cam_rec_channels = [self.client.get_channel(channel_id) for channel_id in self.cam_rec_channel_ids]
-                if self.cam_rec_channels is None or None in self.cam_rec_channels:
-                    print("Could not get status camera recording channels. Retrying...")
-                    self.logger.error("Could not get status camera recording channels. Retrying...")
-                
-            if self.kill:  # If the above loops hang and the application is terminated with KeyboardInterrupt from main thread.
-                return
-            
-            print("Status control and camera recording channels received.")
-            self.logger.info("Status control and camera recording channels received.")
-            self.logger.info("Discord bot online.")
-            await self.status_control_channel.send("Bot is online! Type `!help` for a list of available commands.")
 
         @self.client.event
         @exception_handler_async
@@ -291,6 +283,9 @@ class DiscordBot:
         @exception_handler_async
         async def on_ready():
 
+            await self.get_channels()
+            self.logger.info("Discord bot online.")
+            await self.status_control_channel.send("Bot is online! Type `!help` for a list of available commands.")
             await tasks_loop.start()
 
         try:
