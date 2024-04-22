@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from .configuration import Config
 from .utils import DISCORD_HELP
 
+
 class DiscordBot:
 
     def __init__(self, recording_dir_path: Path, cameras: int, configs: list[Config], recordings_queue: deque[str]) -> None:
@@ -49,6 +50,24 @@ class DiscordBot:
         except Exception as e:
             self.logger.exception(e)
             self.kill = True
+
+
+    async def get_channels(self):
+        '''Asynchronous getting required channels once client is ready.'''
+    
+        while self.status_control_channel is None and not self.kill:
+            self.status_control_channel = self.client.get_channel(self.status_control_channel_id)
+            if self.status_control_channel is None:
+                print("Could not get status control channel. Retrying...")
+                self.logger.error("Could not get status control channel. Retrying...")
+                await asyncio.sleep(1)
+
+        while (self.cam_rec_channels is None or None in self.cam_rec_channels) and not self.kill:
+            self.cam_rec_channels = [self.client.get_channel(channel_id) for channel_id in self.cam_rec_channel_ids]
+            if self.cam_rec_channels is None or None in self.cam_rec_channels:
+                print("Could not get status camera recording channels. Retrying...")
+                self.logger.error("Could not get status camera recording channels. Retrying...")
+                await asyncio.sleep(1)
 
 
     async def get_channels(self):
@@ -285,7 +304,7 @@ class DiscordBot:
 
             await self.get_channels()
             self.logger.info("Discord bot online.")
-            await self.status_control_channel.send("Bot is online! Type `!help` for a list of available commands.")
+            await self.status_control_channel.send("Home alert is online! Type `!help` for a list of available commands.")
             await tasks_loop.start()
 
         try:

@@ -1,4 +1,5 @@
 # Home Alert
+
 A home intruder alert system using webcams with Discord integration. It detects, records, and uploads recordings to a specified channel in a Discord server, notifying the Admin of the server if the alert has been triggered.
 
 The application has 3 main components:
@@ -9,6 +10,8 @@ The application has 3 main components:
 A test script is also provided in order to determine the configuration properties of your webcam(s).
 
 Please check out the following if you want to learn more about the application and it's configuration options.
+
+Credit to [this video](https://www.youtube.com/watch?v=QPjPyUJeYYE) from [NeuralNine](https://www.youtube.com/@NeuralNine) for the inspiration.
 
 ## Table of Contents
 - [How to run](#how-to-run)
@@ -34,6 +37,7 @@ Please check out the following if you want to learn more about the application a
     - Ensure all requirements are installed as instructed above.
     - Open a Terminal/Powershell/Command Line window in the directory of the `camera_test/test.py` file is located as instructed above.
     - Open the `test.py` file in a file editor or IDE of your choice and modify the following fields to your preferences:
+        - `camera_id`: The id of the camera you want to test (starting from 0 and ascending).
         - `min_framerate`: The minimum framerate to check.
         - `max_framerate`: The maximum framerate to check.
         - `step`: The step at which the framerates will be tested between minimum and maximum.
