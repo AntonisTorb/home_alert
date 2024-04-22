@@ -1,7 +1,6 @@
 {
     "0": {
         "detecting": false,
-        "recording": false,
         "debug": true,
         "max_file_size_mb": 25,
         "detector_frame_width": 640,
@@ -16,7 +15,6 @@
     },
     "1": {
         "detecting": false,
-        "recording": false,
         "debug": true,
         "max_file_size_mb": 25,
         "detector_frame_width": 640,

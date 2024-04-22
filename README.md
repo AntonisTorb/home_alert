@@ -51,7 +51,6 @@ You can find several settings in the `config.json` file. The file structure is t
 Bellow are the settings, default values, as well as an explanation of what each setting represents:
 
 - `"detecting": false`: Whether the Detector component(s) will start detecting for movement at the start of the application (can be updated with a Discord bot [command](#discord-bot-commands)).
-- `"recording": false`: Whether the Recorder component(s) will start recording at the start of the application (can be updated with a Discord bot [command](#discord-bot-commands)). Recommended to keep `false`, unless you want the application to constantly record and upload to Discord.
 - `"debug": true`: The debug mode will show additional information while the Detector is running, assisting you in choosing the best configuration options for it. If set to `true`, it will display a window with the frames detected. The `mean threshold value` between the current and previous frame will also be displayed in the console if any movement is detected. This value is used for determining when to trigger the alert and the threshold for it can be set with the `alert_threshold` option below.
 
     Finally, if the alert is triggered, it will display a window with the recorder frames.

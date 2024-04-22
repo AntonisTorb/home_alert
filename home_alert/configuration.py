@@ -8,7 +8,6 @@ class Config():
 
         # Default configuration values.
         self.detecting: bool = False
-        self.recording: bool = False
         self.debug: bool = True
         self.max_file_size_mb: int = 25
         self.detector_frame_width: int = 640

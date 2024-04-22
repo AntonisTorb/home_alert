@@ -52,25 +52,7 @@ class DiscordBot:
             self.kill = True
 
 
-    async def get_channels(self):
-        '''Asynchronous getting required channels once client is ready.'''
-    
-        while self.status_control_channel is None and not self.kill:
-            self.status_control_channel = self.client.get_channel(self.status_control_channel_id)
-            if self.status_control_channel is None:
-                print("Could not get status control channel. Retrying...")
-                self.logger.error("Could not get status control channel. Retrying...")
-                await asyncio.sleep(1)
-
-        while (self.cam_rec_channels is None or None in self.cam_rec_channels) and not self.kill:
-            self.cam_rec_channels = [self.client.get_channel(channel_id) for channel_id in self.cam_rec_channel_ids]
-            if self.cam_rec_channels is None or None in self.cam_rec_channels:
-                print("Could not get status camera recording channels. Retrying...")
-                self.logger.error("Could not get status camera recording channels. Retrying...")
-                await asyncio.sleep(1)
-
-
-    async def get_channels(self):
+    async def get_channels(self) -> None:
         '''Asynchronous getting required channels once client is ready.'''
     
         while self.status_control_channel is None and not self.kill:
@@ -88,7 +70,7 @@ class DiscordBot:
                 await asyncio.sleep(1)
 
             
-    async def clear_channel(self):
+    async def clear_channel(self) -> None:
         '''Asynchronous deleting all messages in the `status-control` Discord channel.'''
 
         msg_counter: int = 0
@@ -102,7 +84,7 @@ class DiscordBot:
                 break
 
     
-    async def check_notification_send(self):
+    async def check_notification_send(self) -> None:
         '''Asynchronous checking if the alert has been activated sending Discord notification if not sent.'''
 
         for index, config in enumerate(self.configs):
@@ -115,7 +97,7 @@ class DiscordBot:
                     self.notified_alert[index] = True
 
 
-    async def check_files_upload(self):
+    async def check_files_upload(self) -> None:
         '''Asynchronous checking if files are available to upload, attaching them and sending message to appropriate Discord channel,
         and moving them to `uploaded` directory once finished.
         '''
@@ -129,7 +111,7 @@ class DiscordBot:
             file_path.rename(self.uploaded_rec_path / filename)
 
 
-    async def killswitch_check(self):
+    async def killswitch_check(self) -> None:
         '''Asynchronous checking whether the close command has been sent. Closes the connection if True.'''
 
         if self.kill:
@@ -163,7 +145,7 @@ class DiscordBot:
                 await self.status_control_channel.send(f'Camera {config.cam} now detecting.')
 
 
-    async def stop_detecting(self):
+    async def stop_detecting(self) -> None:
         '''Signals the Detector component(s) to stop detecting. 
         Sends message to the status-control channel notifying of the above.
         '''
@@ -190,7 +172,7 @@ class DiscordBot:
             self.notified_alert: list[bool] = [False for _ in self.configs]
  
 
-    async def set_detector_threshold(self, message_content: str):
+    async def set_detector_threshold(self, message_content: str) -> None:
         '''Updates the detector threshold value for the specified camera.
         Camera and new value specified in `message_content`.
         '''
@@ -207,7 +189,7 @@ class DiscordBot:
         await self.status_control_channel.send(f'Detector threshold for camera {cam} set to {detector_threshold}.')
 
 
-    async def set_alert_threshold(self, message_content: str):
+    async def set_alert_threshold(self, message_content: str) -> None:
         '''Updates the alert threshold value for the specified camera.
         Camera and new value specified in `message_content`.
         '''
@@ -224,7 +206,7 @@ class DiscordBot:
         await self.status_control_channel.send(f'Detector threshold for camera {cam} set to {alert_threshold}.')
 
 
-    async def check_log(self, message_content: str):
+    async def check_log(self, message_content: str) -> None:
         '''Sends message to the status-control channel with the last lines of the log file.
         Amount of lines is specified by the user in `message_content`.'''
 
@@ -258,14 +240,14 @@ class DiscordBot:
         
         @tasks.loop(seconds=1)
         @exception_handler_async
-        async def tasks_loop():
+        async def tasks_loop() -> None:
 
             await asyncio.gather(self.check_files_upload(), self.check_notification_send(), self.killswitch_check())
 
 
         @self.client.event
         @exception_handler_async
-        async def on_message(message: discord.Message):
+        async def on_message(message: discord.Message) -> None:
 
             if message.channel != self.status_control_channel:
                 return
@@ -300,7 +282,7 @@ class DiscordBot:
 
         @self.client.event
         @exception_handler_async
-        async def on_ready():
+        async def on_ready() -> None:
 
             await self.get_channels()
             self.logger.info("Discord bot online.")
