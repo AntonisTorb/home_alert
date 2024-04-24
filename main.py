@@ -96,7 +96,7 @@ def main():
     parser.add_argument("-c", "--cameras", type=int, help="Amount of webcams.", required=False)
     args = parser.parse_args()
 
-    if args.cameras is not None or type(args.cameras) != type(int):
+    if args.cameras is not None:
         cameras: int = args.cameras
     else:
         cameras: int = 1

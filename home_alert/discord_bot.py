@@ -32,7 +32,7 @@ class DiscordBot:
 
             self.notified_alert: list[bool] = [False for _ in self.configs]
 
-            self.intents:discord.Intents = discord.Intents.default()
+            self.intents: discord.Intents = discord.Intents.default()
             self.intents.messages = True
             self.intents.message_content = True
             self.client: discord.Client = discord.Client(intents=self.intents)
