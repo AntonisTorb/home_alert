@@ -1,3 +1,4 @@
+from collections import deque
 import datetime
 import logging
 import time
@@ -14,10 +15,11 @@ class Detector:
 
         self.cam: int = cam
         self.config: Config = config
-        self.alerts: int = 0
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.bad_frames_counter: int = 5
         self.previous_frame: cv2.typing.MatLike|None = None
+        self.thresh_mean_queue = deque(maxlen=self.config.frames_for_alert)
+
 
     def _make_detector(self) -> None:
         '''Creates a Video Capture object for the detector component.'''
@@ -63,32 +65,29 @@ class Detector:
                 
             difference: cv2.typing.MatLike = cv2.absdiff(frame, self.previous_frame)
             threshold: cv2.typing.MatLike = cv2.threshold(difference, self.config.detector_threshold, 255, cv2.THRESH_BINARY)[1]
-            if (threshold_mean := round(threshold.mean(), 2)) > self.config.alert_threshold:
-                self.alerts += 1
-            else:
-                if self.alerts > 0:
-                    self.alerts -= 1
+
+            self.thresh_mean_queue.append(threshold.mean())
 
             if self.config.debug:
-                if threshold_mean > 0:
-                    print(f'Detector {self.cam} {threshold_mean = }')
+                if sum(self.thresh_mean_queue):
+                    print(f'Detector {self.cam} threshold: {sum(self.thresh_mean_queue):.2f}')
                 cur_date: datetime.datetime = datetime.datetime.now()
-                cur_date: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
-                cv2.putText(threshold, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
+                cur_date_str: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+                cv2.putText(threshold, cur_date_str, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
                 cv2.imshow(f'det-{self.cam}', threshold)
                 cv2.waitKey(1)
 
             self.previous_frame = frame
 
-            if self.alerts > self.config.alerts_to_trigger_recording:
+            if sum(self.thresh_mean_queue) >= self.config.alert_threshold:
                 self.config.recording = True
                 self.config.detecting = False
                 self.logger.info(f'Detector {self.cam} alert triggered, starting recording.')
-            
+
             if not self.config.detecting:
                 self.det.release()
                 self.previous_frame = None
-                self.alerts = 0
+                self.thresh_mean_queue = deque(maxlen=self.config.frames_for_alert)
                 if self.config.debug:
                     try:
                         cv2.destroyWindow(f'det-{self.cam}')

@@ -14,8 +14,8 @@ class Config():
         self.detector_frame_height: int = 480
         self.detector_frame_rate: int = 10
         self.detector_threshold: int = 5
-        self.alert_threshold: int = 10
-        self.alerts_to_trigger_recording: int = 5
+        self.frames_for_alert: int = 5
+        self.alert_threshold: int = 50
         self.recorder_frame_width: int = 1280
         self.recorder_frame_height: int = 720
         self.recorder_frame_rate: int = 30

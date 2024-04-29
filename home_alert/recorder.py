@@ -73,10 +73,10 @@ class Recorder:
             elif ret and self.bad_frames_counter < 5:
                 self.bad_frames_counter += 1
             
-            cur_date: datetime.datetime|str = datetime.datetime.now()
+            cur_date: datetime.datetime = datetime.datetime.now()
             cur_timestamp: float = cur_date.timestamp()
-            cur_date = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
-            cv2.putText(frame, cur_date, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 1, cv2.LINE_AA)
+            cur_date_str: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+            cv2.putText(frame, cur_date_str, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,255,255), 1, cv2.LINE_AA)
             
             if self.rec is None:
                 filename: str = f'{self.cam}-{int(cur_timestamp)}.mp4'
