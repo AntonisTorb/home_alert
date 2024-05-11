@@ -160,7 +160,7 @@ class DiscordBot:
 
     async def stop_recording(self) -> None:
         '''Signals the Recorder and Detector component(s) to stop recording and start detecting.
-        Resets the alert notificatioin booleans to False.
+        Resets the alert notification booleans to False.
         Sends message to the status-control channel notifying of the above.
         '''
 
@@ -169,8 +169,22 @@ class DiscordBot:
                 config.recording = False
                 config.detecting = True
                 await self.status_control_channel.send(f'Recording stopped for camera {config.cam}, now detecting.')
-            self.notified_alert: list[bool] = [False for _ in self.configs]
- 
+            self.notified_alert = [False for _ in self.configs]
+    
+
+    async def stop(self) -> None:
+        '''Signals the Recorder and Detector component(s) to stop recording and detecting.
+        Resets the alert notification booleans to False.
+        Sends message to the status-control channel notifying of the above.
+        '''
+        
+        for config in self.configs:
+            self.notified_alert = [False for _ in self.configs]
+            config.recording = False
+            config.detecting = False
+
+        await self.status_control_channel.send("All cameras stopped detecting and recording, now on standby.")
+
 
     async def set_detector_threshold(self, message_content: str) -> None:
         '''Updates the detector threshold value for the specified camera.
@@ -269,6 +283,8 @@ class DiscordBot:
                 await self.stop_detecting()
             elif message.content.lower() == "!stoprecording":
                 await self.stop_recording()
+            elif message.content.lower() == "!stop":
+                await self.stop()
             elif message.content.lower().startswith("!setdetectorthreshold"):
                 await self.set_detector_threshold(message.content.lower())
             elif message.content.lower().startswith("!setalertthreshold"):
