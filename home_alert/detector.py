@@ -69,10 +69,10 @@ class Detector:
             self.thresh_mean_queue.append(threshold.mean())
 
             if self.config.debug:
-                if sum(self.thresh_mean_queue):
-                    print(f'Detector {self.cam} threshold: {sum(self.thresh_mean_queue):.2f}')
                 cur_date: datetime.datetime = datetime.datetime.now()
                 cur_date_str: str = cur_date.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+                if sum(self.thresh_mean_queue):
+                    print(f'[{cur_date_str}] Detector {self.cam} threshold: {sum(self.thresh_mean_queue):.2f}')
                 cv2.putText(threshold, cur_date_str, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1.5, (255,0,0), 1, cv2.LINE_AA)
                 cv2.imshow(f'det-{self.cam}', threshold)
                 cv2.waitKey(1)
