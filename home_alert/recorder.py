@@ -106,7 +106,6 @@ class Recorder:
                 self.rec_filepath =  None
                 self.rec = None
                 self.count = 0
-                self.config.detecting = True
                 if self.config.debug:
                     try:
                         cv2.destroyWindow(f'cap-{self.cam}')

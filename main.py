@@ -73,7 +73,7 @@ def exit_loop(main_logger: logging.Logger, configs: list[Config],
 
             # wait for all threads to safely finish.
             while True:
-                finished_threads  = 0
+                finished_threads = 0
                 for thread in threads:
                     if not thread.is_alive():
                         finished_threads += 1
